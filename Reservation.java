@@ -267,34 +267,8 @@ public class Reservation {
 
     @Override
     public String toString() {
-        return "Reservation{" +
-               "id='" + reservationID + '\'' +
-               ", plot=" + plot.getPlotID() +
-               ", gardener=" + gardener.getName() +
-               ", period=" + dateRange +
-               ", status=" + status +
-               '}';
-    }
-
-    /**
-     * Returns a detailed string representation.
-     */
-    public String toDetailedString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Reservation: ").append(reservationID).append("\n");
-        sb.append("  Plot: ").append(plot.getName()).append(" (").append(plot.getPlotID()).append(")\n");
-        sb.append("  Gardener: ").append(gardener.getName()).append(" (").append(gardener.getGardenerID()).append(")\n");
-        sb.append("  Period: ").append(dateRange).append(" (").append(dateRange.lengthInDays()).append(" days)\n");
-        sb.append("  Status: ").append(status).append(" - ").append(status.getDescription()).append("\n");
-        sb.append("  Crops: ");
-        if (plantingPlan.isEmpty()) {
-            sb.append("None specified");
-        } else {
-            for (int i = 0; i < plantingPlan.size(); i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(plantingPlan.get(i).getName());
-            }
-        }
-        return sb.toString();
+        String crops = plantingPlan.isEmpty() ? "None" : plantingPlan.size() + " crops";
+        return reservationID + " | " + gardener.getName() + " | " + plot.getName() + 
+               " | " + dateRange + " | " + status + " | " + crops;
     }
 }
