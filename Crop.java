@@ -20,7 +20,7 @@ public final class Crop {
         SPRING, SUMMER, FALL, WINTER
     }
 
-    // ==================== CONSTRUCTORS ====================
+    // CONSTRUCTORS
 
     /**
      * Full constructor with all properties.
@@ -61,7 +61,7 @@ public final class Crop {
         this(name, minGrowingDays, null, null);
     }
 
-    // ==================== GETTERS ====================
+    // GETTERS
 
     public String getName() {
         return name;
@@ -91,15 +91,6 @@ public final class Crop {
         return dateRange.lengthInDays() >= minGrowingDays;
     }
 
-    /**
-     * Checks if a given season is optimal for this crop.
-     * @param season the season to check
-     * @return true if the season is in the best seasons set
-     */
-    public boolean isGoodSeason(Season season) {
-        return bestSeasons.contains(season);
-    }
-
     // ==================== OBJECT METHODS ====================
 
     @Override
@@ -110,6 +101,7 @@ public final class Crop {
         return Objects.equals(name.toLowerCase(), crop.name.toLowerCase());
     }
 
+
     @Override
     public int hashCode() {
         return Objects.hash(name.toLowerCase());
@@ -117,21 +109,13 @@ public final class Crop {
 
     @Override
     public String toString() {
-        return name;
-    }
-
-    /**
-     * Returns a detailed string representation.
-     */
-    public String toDetailedString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Crop: ").append(name);
+        String result = name;
         if (minGrowingDays > 0) {
-            sb.append(" (").append(minGrowingDays).append(" days min)");
+            result += " (" + minGrowingDays + " days min)";
         }
         if (!bestSeasons.isEmpty()) {
-            sb.append(" - Best in: ").append(bestSeasons);
+            result += " - Best in: " + bestSeasons;
         }
-        return sb.toString();
+        return result;
     }
 }

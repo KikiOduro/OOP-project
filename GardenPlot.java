@@ -18,8 +18,7 @@ public class GardenPlot {
     private final List<Reservation> reservations;
     private Gardener currentGardener; // Currently assigned gardener (for active reservation)
 
-    // ==================== CONSTRUCTORS ====================
-
+    //  CONSTRUCTORS
     /**
      * Full constructor with all properties.
      * @param plotID unique identifier

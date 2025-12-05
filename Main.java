@@ -77,10 +77,10 @@ public class Main {
             "Aromatic herb");
         Crop carrots = new Crop("Carrots", 70);
         
-        System.out.println("  Defined: " + tomatoes.toDetailedString());
-        System.out.println("  Defined: " + lettuce.toDetailedString());
-        System.out.println("  Defined: " + basil.toDetailedString());
-        System.out.println("  Defined: " + carrots.toDetailedString());
+        System.out.println("  Defined: " + tomatoes);
+        System.out.println("  Defined: " + lettuce);
+        System.out.println("  Defined: " + basil);
+        System.out.println("  Defined: " + carrots);
         System.out.println();
 
         // ============================================================
