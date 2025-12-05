@@ -15,7 +15,7 @@ public class Reservation {
     private final List<Crop> plantingPlan;
     private ReservationStatus status;
 
-    // ==================== CONSTRUCTOR ====================
+    // CONSTRUCTORS
 
     /**
      * Creates a new reservation with REQUESTED status.

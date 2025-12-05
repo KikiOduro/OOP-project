@@ -79,7 +79,7 @@ public final class Crop {
         return description;
     }
 
-    // ==================== UTILITY METHODS ====================
+    //UTILITY METHODS
 
     /**
      * Checks if a date range provides enough time for this crop to grow.
