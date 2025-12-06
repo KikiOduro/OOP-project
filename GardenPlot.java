@@ -5,27 +5,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Represents a garden plot that can be reserved by gardeners.
- * Manages plot properties, allowed crops, and tracks reservations.
- */
+// GardenPlot - a plot that gardeners can reserve
 public class GardenPlot {
     private final String plotID;
     private String name;
     private double sizeSqMeters;
     private String location;
-    private final Set<String> allowedCrops; // Empty set means all crops allowed
+    private final Set<String> allowedCrops;  // empty = all crops allowed
     private final List<Reservation> reservations;
-    private Gardener currentGardener; // Currently assigned gardener (for active reservation)
+    private Gardener currentGardener;
 
-    //  CONSTRUCTORS
-    /**
-     * Full constructor with all properties.
-     * @param plotID unique identifier
-     * @param name display name
-     * @param sizeSqMeters size in square meters
-     * @param location location description
-     */
+    // constructors
+
     public GardenPlot(String plotID, String name, double sizeSqMeters, String location) {
         if (plotID == null || plotID.trim().isEmpty()) {
             throw new IllegalArgumentException("Plot ID cannot be null or empty");
@@ -39,24 +30,15 @@ public class GardenPlot {
         this.currentGardener = null;
     }
 
-    /**
-     * Constructor with ID and name.
-     * @param plotID unique identifier
-     * @param name display name
-     */
     public GardenPlot(String plotID, String name) {
         this(plotID, name, 0, null);
     }
 
-    /**
-     * Minimal constructor with just ID.
-     * @param plotID unique identifier
-     */
     public GardenPlot(String plotID) {
         this(plotID, plotID, 0, null);
     }
 
-    // ==================== GETTERS ====================
+    // getters
 
     public String getPlotID() {
         return plotID;
@@ -78,22 +60,15 @@ public class GardenPlot {
         return currentGardener;
     }
 
-    /**
-     * Returns an unmodifiable view of allowed crops.
-     * Empty set means all crops are allowed.
-     */
     public Set<String> getAllowedCrops() {
         return Collections.unmodifiableSet(allowedCrops);
     }
 
-    /**
-     * Returns an unmodifiable view of reservations for this plot.
-     */
     public List<Reservation> getReservations() {
         return Collections.unmodifiableList(reservations);
     }
 
-    // ==================== SETTERS ====================
+    // setters
 
     public void setName(String name) {
         this.name = name != null ? name.trim() : this.name;
@@ -107,70 +82,44 @@ public class GardenPlot {
         this.location = location;
     }
 
-    // ==================== CROP RESTRICTIONS ====================
+    // crop restrictions
 
-    /**
-     * Adds a crop to the allowed crops list.
-     * @param cropName name of the crop to allow
-     */
     public void addAllowedCrop(String cropName) {
         if (cropName != null && !cropName.trim().isEmpty()) {
             allowedCrops.add(cropName.trim().toLowerCase());
         }
     }
 
-    /**
-     * Removes a crop from the allowed crops list.
-     * @param cropName name of the crop to disallow
-     */
     public void removeAllowedCrop(String cropName) {
         if (cropName != null) {
             allowedCrops.remove(cropName.trim().toLowerCase());
         }
     }
 
-    /**
-     * Clears all crop restrictions (allows all crops).
-     */
     public void clearCropRestrictions() {
         allowedCrops.clear();
     }
 
-    /**
-     * Checks if a specific crop is allowed on this plot.
-     * @param crop the crop to check
-     * @return true if the crop is allowed (or no restrictions exist)
-     */
+    // check if crop is allowed (empty list = everything allowed)
     public boolean isCropAllowed(Crop crop) {
         if (crop == null) return false;
-        if (allowedCrops.isEmpty()) return true; // No restrictions
+        if (allowedCrops.isEmpty()) return true;
         return allowedCrops.contains(crop.getName().toLowerCase());
     }
 
-    /**
-     * Checks if a crop by name is allowed on this plot.
-     * @param cropName the crop name to check
-     * @return true if the crop is allowed
-     */
     public boolean isCropAllowed(String cropName) {
         if (cropName == null) return false;
         if (allowedCrops.isEmpty()) return true;
         return allowedCrops.contains(cropName.toLowerCase());
     }
 
-    // ==================== AVAILABILITY METHODS ====================
+    // availability
 
-    /**
-     * Checks if this plot is available during a given date range.
-     * Only considers CONFIRMED reservations as blocking.
-     * @param dateRange the date range to check
-     * @return true if the plot is available
-     */
+    // only confirmed reservations block the plot
     public boolean isAvailable(DateRange dateRange) {
         if (dateRange == null) return false;
         
         for (Reservation res : reservations) {
-            // Only confirmed reservations block the plot
             if (res.getStatus().occupiesPlot() && 
                 res.getDateRange().overlaps(dateRange)) {
                 return false;
@@ -179,10 +128,6 @@ public class GardenPlot {
         return true;
     }
 
-    /**
-     * Checks if this plot is currently occupied.
-     * @return true if there's an active reservation that includes today
-     */
     public boolean isCurrentlyOccupied() {
         for (Reservation res : reservations) {
             if (res.getStatus().occupiesPlot() && 
@@ -193,10 +138,6 @@ public class GardenPlot {
         return false;
     }
 
-    /**
-     * Gets all active reservations for this plot.
-     * @return list of active reservations
-     */
     public List<Reservation> getActiveReservations() {
         List<Reservation> active = new ArrayList<>();
         for (Reservation res : reservations) {
@@ -207,11 +148,6 @@ public class GardenPlot {
         return active;
     }
 
-    /**
-     * Gets confirmed reservations that overlap with a date range.
-     * @param dateRange the date range to check
-     * @return list of conflicting reservations
-     */
     public List<Reservation> getConflictingReservations(DateRange dateRange) {
         List<Reservation> conflicts = new ArrayList<>();
         if (dateRange == null) return conflicts;
@@ -225,43 +161,25 @@ public class GardenPlot {
         return conflicts;
     }
 
-    // ==================== RESERVATION MANAGEMENT ====================
+    // reservation management (package-private - used by GardenSystem)
 
-    /**
-     * Adds a reservation to this plot.
-     * Package-private: should be called by GardenSystem.
-     * @param reservation the reservation to add
-     */
     void addReservation(Reservation reservation) {
         if (reservation != null && !reservations.contains(reservation)) {
             reservations.add(reservation);
         }
     }
 
-    /**
-     * Removes a reservation from this plot.
-     * @param reservation the reservation to remove
-     */
     void removeReservation(Reservation reservation) {
         reservations.remove(reservation);
     }
 
-    /**
-     * Assigns a gardener to this plot (for tracking current occupancy).
-     * @param gardener the gardener to assign
-     */
     public void assign(Gardener gardener) {
         this.currentGardener = gardener;
     }
 
-    /**
-     * Releases the current gardener assignment.
-     */
     public void release() {
         this.currentGardener = null;
     }
-
-    // ==================== OBJECT METHODS ====================
 
     @Override
     public boolean equals(Object o) {
@@ -286,9 +204,6 @@ public class GardenPlot {
                '}';
     }
 
-    /**
-     * Returns a detailed string representation.
-     */
     public String toDetailedString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Plot: ").append(name).append(" (").append(plotID).append(")\n");

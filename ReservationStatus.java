@@ -1,26 +1,8 @@
-/**
- * Enum representing the possible states of a reservation.
- * Supports state transitions with validation.
- */
+// status states for a reservation
 public enum ReservationStatus {
-    /**
-     * Initial state when a reservation is first requested.
-     */
     REQUESTED("Pending approval"),
-
-    /**
-     * Reservation has been confirmed/approved.
-     */
     CONFIRMED("Active and confirmed"),
-
-    /**
-     * Reservation was cancelled by gardener or system.
-     */
     CANCELLED("Cancelled"),
-
-    /**
-     * Reservation period has ended successfully.
-     */
     COMPLETED("Successfully completed");
 
     private final String description;
@@ -33,17 +15,10 @@ public enum ReservationStatus {
         return description;
     }
 
-    /**
-     * Checks if a transition from this status to another is valid.
-     * Valid transitions:
-     * - REQUESTED -> CONFIRMED, CANCELLED
-     * - CONFIRMED -> COMPLETED, CANCELLED
-     * - CANCELLED -> (terminal state, no transitions)
-     * - COMPLETED -> (terminal state, no transitions)
-     * 
-     * @param newStatus the target status
-     * @return true if the transition is allowed
-     */
+    // check if we can go from current status to new status
+    // REQUESTED -> CONFIRMED or CANCELLED
+    // CONFIRMED -> COMPLETED or CANCELLED
+    // CANCELLED and COMPLETED are final (can't change)
     public boolean canTransitionTo(ReservationStatus newStatus) {
         if (newStatus == null || newStatus == this) {
             return false;
@@ -62,27 +37,17 @@ public enum ReservationStatus {
         }
     }
 
-    /**
-     * Checks if this status represents an active reservation.
-     * @return true if the reservation is REQUESTED or CONFIRMED
-     */
+    // still in progress (not cancelled or done)
     public boolean isActive() {
         return this == REQUESTED || this == CONFIRMED;
     }
 
-    /**
-     * Checks if this status is a terminal state.
-     * @return true if CANCELLED or COMPLETED
-     */
+    // can't change anymore
     public boolean isTerminal() {
         return this == CANCELLED || this == COMPLETED;
     }
 
-    /**
-     * Checks if a plot is occupied under this status.
-     * Only CONFIRMED reservations actually occupy a plot.
-     * @return true if the status means the plot is in use
-     */
+    // only confirmed reservations actually take up the plot
     public boolean occupiesPlot() {
         return this == CONFIRMED;
     }

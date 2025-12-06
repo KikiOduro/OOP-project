@@ -3,21 +3,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Main facade/controller for the Garden Reservation System.
- * Coordinates all operations between Gardeners, GardenPlots, and Reservations.
- * Implements the Facade pattern to provide a simplified interface.
- */
+// GardenSystem - main controller that ties everything together
 public class GardenSystem {
     private final List<GardenPlot> plots;
     private final List<Gardener> gardeners;
     private final List<Reservation> reservations;
     private int reservationCounter;
 
-    // Configuration constants
     private static final int MAX_ACTIVE_RESERVATIONS_PER_GARDENER = 3;
-
-    //  CONSTRUCTOR 
 
     public GardenSystem() {
         this.plots = new ArrayList<>();
@@ -26,36 +19,22 @@ public class GardenSystem {
         this.reservationCounter = 0;
     }
 
-    //  GETTERS
+    // getters
 
-    /**
-     * Returns an unmodifiable view of all plots.
-     */
     public List<GardenPlot> getPlots() {
         return Collections.unmodifiableList(plots);
     }
 
-    /**
-     * Returns an unmodifiable view of all gardeners.
-     */
     public List<Gardener> getGardeners() {
         return Collections.unmodifiableList(gardeners);
     }
 
-    /**
-     * Returns an unmodifiable view of all reservations.
-     */
     public List<Reservation> getReservations() {
         return Collections.unmodifiableList(reservations);
     }
 
-    //  PLOT MANAGEMENT 
+    // plot management
 
-    /**
-     * Adds a new plot to the system.
-     * @param plot the plot to add
-     * @return true if added successfully, false if already exists
-     */
     public boolean addPlot(GardenPlot plot) {
         if (plot == null) return false;
         
@@ -66,27 +45,17 @@ public class GardenSystem {
         return true;
     }
 
-    /**
-     * Removes a plot from the system.
-     * @param plotId the ID of the plot to remove
-     * @return true if removed, false if not found or has active reservations
-     */
     public boolean removePlot(String plotId) {
         Optional<GardenPlot> plotOpt = findPlotById(plotId);
         if (!plotOpt.isPresent()) return false;
         
         GardenPlot plot = plotOpt.get();
         if (!plot.getActiveReservations().isEmpty()) {
-            return false; // Can't remove plot with active reservations
+            return false;
         }
         return plots.remove(plot);
     }
 
-    /**
-     * Finds a plot by its ID.
-     * @param plotId the plot ID
-     * @return Optional containing the plot if found
-     */
     public Optional<GardenPlot> findPlotById(String plotId) {
         if (plotId == null) return Optional.empty();
         for (GardenPlot plot : plots) {
@@ -97,13 +66,8 @@ public class GardenSystem {
         return Optional.empty();
     }
 
-    // GARDENER MANAGEMENT 
+    // gardener management
 
-    /**
-     * Registers a new gardener in the system.
-     * @param gardener the gardener to register
-     * @return true if registered successfully, false if already exists
-     */
     public boolean registerGardener(Gardener gardener) {
         if (gardener == null) return false;
         
@@ -114,27 +78,17 @@ public class GardenSystem {
         return true;
     }
 
-    /**
-     * Removes a gardener from the system.
-     * @param gardenerId the ID of the gardener to remove
-     * @return true if removed, false if not found or has active reservations
-     */
     public boolean removeGardener(String gardenerId) {
         Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
         if (!gardenerOpt.isPresent()) return false;
         
         Gardener gardener = gardenerOpt.get();
         if (gardener.hasActiveReservations()) {
-            return false; // Can't remove gardener with active reservations
+            return false;
         }
         return gardeners.remove(gardener);
     }
 
-    /**
-     * Finds a gardener by their ID.
-     * @param gardenerId the gardener ID
-     * @return Optional containing the gardener if found
-     */
     public Optional<Gardener> findGardenerById(String gardenerId) {
         if (gardenerId == null) return Optional.empty();
         for (Gardener g : gardeners) {
@@ -145,13 +99,8 @@ public class GardenSystem {
         return Optional.empty();
     }
 
-    // AVAILABILITY QUERIES 
+    // availability queries
 
-    /**
-     * Finds all plots available during a given date range.
-     * @param range the date range to check
-     * @return list of available plots
-     */
     public List<GardenPlot> findAvailablePlots(DateRange range) {
         List<GardenPlot> available = new ArrayList<>();
         if (range == null || !range.isValid()) return available;
@@ -164,12 +113,6 @@ public class GardenSystem {
         return available;
     }
 
-    /**
-     * Finds all plots available for a specific crop during a date range.
-     * @param range the date range to check
-     * @param crop the crop to plant
-     * @return list of available and suitable plots
-     */
     public List<GardenPlot> findAvailablePlots(DateRange range, Crop crop) {
         List<GardenPlot> available = new ArrayList<>();
         if (range == null || !range.isValid()) return available;
@@ -183,38 +126,22 @@ public class GardenSystem {
         return available;
     }
 
-    /**
-     * Checks if a specific plot is available during a date range.
-     * @param plotId the plot ID
-     * @param range the date range
-     * @return true if available
-     */
     public boolean isPlotAvailable(String plotId, DateRange range) {
         Optional<GardenPlot> plotOpt = findPlotById(plotId);
         return plotOpt.isPresent() && plotOpt.get().isAvailable(range);
     }
 
-    // RESERVATION MANAGEMENT 
+    // reservation management
 
-    /**
-     * Creates a new reservation request.
-     * @param plotId the ID of the plot to reserve
-     * @param gardenerId the ID of the gardener
-     * @param range the reservation period
-     * @param plantingPlan optional list of crops
-     * @return the created reservation, or null if creation failed
-     */
     public Reservation createReservation(String plotId,
                                          String gardenerId,
                                          DateRange range,
                                          List<Crop> plantingPlan) {
-        // Validate inputs
         if (plotId == null || gardenerId == null || range == null || !range.isValid()) {
             System.out.println("Error: Invalid reservation details.");
             return null;
         }
 
-        // Find plot and gardener
         Optional<GardenPlot> plotOpt = findPlotById(plotId);
         Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
 
@@ -230,19 +157,16 @@ public class GardenSystem {
         GardenPlot plot = plotOpt.get();
         Gardener gardener = gardenerOpt.get();
 
-        // Check gardener's reservation limit
         if (gardener.getActiveReservationCount() >= MAX_ACTIVE_RESERVATIONS_PER_GARDENER) {
             System.out.println("Error: Gardener has reached maximum active reservations.");
             return null;
         }
 
-        // Check plot availability
         if (!plot.isAvailable(range)) {
             System.out.println("Error: Plot is not available for the requested dates.");
             return null;
         }
 
-        // Validate crops if provided
         if (plantingPlan != null) {
             for (Crop crop : plantingPlan) {
                 if (!plot.isCropAllowed(crop)) {
@@ -252,11 +176,9 @@ public class GardenSystem {
             }
         }
 
-        // Create the reservation
         String reservationId = generateReservationId();
         Reservation reservation = new Reservation(reservationId, plot, gardener, range, plantingPlan);
 
-        // Register the reservation
         reservations.add(reservation);
         plot.addReservation(reservation);
         gardener.addReservation(reservation);
@@ -264,17 +186,11 @@ public class GardenSystem {
         return reservation;
     }
 
-    /**
-     * Simplified reservation creation without planting plan.
-     */
     public Reservation createReservation(String plotId, String gardenerId, DateRange range) {
         return createReservation(plotId, gardenerId, range, null);
     }
 
-    /**
-     * Shortcut: creates and immediately confirms a reservation.
-     * @return the confirmed reservation, or null if failed
-     */
+    // create and confirm in one step
     public Reservation bookPlot(String plotId,
                                 String gardenerId,
                                 DateRange range,
@@ -286,11 +202,6 @@ public class GardenSystem {
         return reservation;
     }
 
-    /**
-     * Confirms a pending reservation.
-     * @param reservationId the reservation ID
-     * @return true if confirmed successfully
-     */
     public boolean confirmReservation(String reservationId) {
         Optional<Reservation> resOpt = findReservationById(reservationId);
         if (!resOpt.isPresent()) {
@@ -300,7 +211,6 @@ public class GardenSystem {
 
         Reservation reservation = resOpt.get();
         
-        // Re-check availability before confirming
         if (!reservation.getPlot().isAvailable(reservation.getDateRange())) {
             System.out.println("Error: Plot is no longer available for the requested dates.");
             return false;
@@ -316,11 +226,6 @@ public class GardenSystem {
         }
     }
 
-    /**
-     * Cancels a reservation.
-     * @param reservationId the reservation ID
-     * @return true if cancelled successfully
-     */
     public boolean cancelReservation(String reservationId) {
         Optional<Reservation> resOpt = findReservationById(reservationId);
         if (!resOpt.isPresent()) {
@@ -339,11 +244,6 @@ public class GardenSystem {
         }
     }
 
-    /**
-     * Marks a reservation as completed.
-     * @param reservationId the reservation ID
-     * @return true if marked completed successfully
-     */
     public boolean completeReservation(String reservationId) {
         Optional<Reservation> resOpt = findReservationById(reservationId);
         if (!resOpt.isPresent()) {
@@ -362,11 +262,6 @@ public class GardenSystem {
         }
     }
 
-    /**
-     * Finds a reservation by its ID.
-     * @param reservationId the reservation ID
-     * @return Optional containing the reservation if found
-     */
     public Optional<Reservation> findReservationById(String reservationId) {
         if (reservationId == null) return Optional.empty();
         for (Reservation res : reservations) {
@@ -377,10 +272,6 @@ public class GardenSystem {
         return Optional.empty();
     }
 
-    /**
-     * Gets all active reservations.
-     * @return list of active reservations
-     */
     public List<Reservation> getActiveReservations() {
         List<Reservation> active = new ArrayList<>();
         for (Reservation res : reservations) {
@@ -391,11 +282,6 @@ public class GardenSystem {
         return active;
     }
 
-    /**
-     * Gets all reservations for a specific gardener.
-     * @param gardenerId the gardener ID
-     * @return list of reservations
-     */
     public List<Reservation> getReservationsForGardener(String gardenerId) {
         List<Reservation> result = new ArrayList<>();
         Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
@@ -405,11 +291,6 @@ public class GardenSystem {
         return result;
     }
 
-    /**
-     * Gets all reservations for a specific plot.
-     * @param plotId the plot ID
-     * @return list of reservations
-     */
     public List<Reservation> getReservationsForPlot(String plotId) {
         List<Reservation> result = new ArrayList<>();
         Optional<GardenPlot> plotOpt = findPlotById(plotId);
@@ -419,12 +300,8 @@ public class GardenSystem {
         return result;
     }
 
-    // REPORTS 
+    // reports
 
-    /**
-     * Generates a comprehensive planting report.
-     * @return formatted report string
-     */
     public String generatePlantingReport() {
         StringBuilder sb = new StringBuilder();
         sb.append("═══════════════════════════════════════\n");
@@ -436,7 +313,6 @@ public class GardenSystem {
             return sb.toString();
         }
 
-        // Summary
         sb.append("SUMMARY\n");
         sb.append("───────────────────────────────────────\n");
         sb.append("Total Plots: ").append(plots.size()).append("\n");
@@ -444,7 +320,6 @@ public class GardenSystem {
         sb.append("Total Reservations: ").append(reservations.size()).append("\n");
         sb.append("Active Reservations: ").append(getActiveReservations().size()).append("\n\n");
 
-        // Active Reservations
         sb.append("ACTIVE RESERVATIONS\n");
         sb.append("───────────────────────────────────────\n");
         
@@ -459,7 +334,6 @@ public class GardenSystem {
             sb.append("No active reservations.\n");
         }
 
-        // Completed/Cancelled (last 5)
         sb.append("\nRECENT COMPLETED/CANCELLED\n");
         sb.append("───────────────────────────────────────\n");
         
@@ -478,10 +352,6 @@ public class GardenSystem {
         return sb.toString();
     }
 
-    /**
-     * Generates a plot availability report.
-     * @return formatted report string
-     */
     public String generateAvailabilityReport() {
         StringBuilder sb = new StringBuilder();
         sb.append("═══════════════════════════════════════\n");
@@ -521,7 +391,7 @@ public class GardenSystem {
         return sb.toString();
     }
 
-    // ==================== HELPER METHODS ====================
+    // helpers
 
     private String generateReservationId() {
         reservationCounter++;
@@ -547,8 +417,6 @@ public class GardenSystem {
         }
         sb.append("\n");
     }
-
-    // SYSTEM INFO 
 
     @Override
     public String toString() {
