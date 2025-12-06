@@ -1,237 +1,680 @@
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 
-// demo showing how the whole system works together
+// Interactive GardenMate System - Gardeners can make their own reservations
 public class Main {
+    private static GardenSystem system;
+    private static Gardener currentGardener;
+    private static Scanner scanner;
+    private static List<Crop> availableCrops;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     public static void main(String[] args) {
-        System.out.println("╔═══════════════════════════════════════════════════════╗");
-        System.out.println("║     GARDENMATE - Community Garden Reservation System  ║");
-        System.out.println("╚═══════════════════════════════════════════════════════╝\n");
-
-        // start up the system
-        System.out.println("▶ Initializing GardenMate System...\n");
-        GardenSystem system = new GardenSystem();
-
-        // add some plots
-        System.out.println("▶ Setting up Garden Plots...");
+        scanner = new Scanner(System.in);
+        initializeSystem();
         
+        printWelcome();
+        
+        boolean running = true;
+        while (running) {
+            if (currentGardener == null) {
+                running = showLoginMenu();
+            } else {
+                running = showMainMenu();
+            }
+        }
+        
+        System.out.println("\n╔═══════════════════════════════════════════════════════╗");
+        System.out.println("║     Thank you for using GardenMate! Happy Gardening!  ║");
+        System.out.println("╚═══════════════════════════════════════════════════════╝");
+        scanner.close();
+    }
+
+    private static void initializeSystem() {
+        system = new GardenSystem();
+        
+        // Set up garden plots
         GardenPlot plot1 = new GardenPlot("P001", "Sunny Corner", 25.0, "North Section");
         GardenPlot plot2 = new GardenPlot("P002", "Shady Grove", 30.0, "East Section");
         GardenPlot plot3 = new GardenPlot("P003", "Herb Garden", 15.0, "South Section");
+        GardenPlot plot4 = new GardenPlot("P004", "Vegetable Patch", 40.0, "West Section");
+        GardenPlot plot5 = new GardenPlot("P005", "Flower Bed", 20.0, "Central Area");
         
-        // Add crop restrictions to Herb Garden
+        // Herb Garden only allows herbs
         plot3.addAllowedCrop("basil");
         plot3.addAllowedCrop("mint");
         plot3.addAllowedCrop("rosemary");
         plot3.addAllowedCrop("thyme");
+        plot3.addAllowedCrop("oregano");
+        plot3.addAllowedCrop("parsley");
         
         system.addPlot(plot1);
         system.addPlot(plot2);
         system.addPlot(plot3);
+        system.addPlot(plot4);
+        system.addPlot(plot5);
         
-        System.out.println("  Added: " + plot1.getName() + " (" + plot1.getSizeSqMeters() + " m²)");
-        System.out.println("  Added: " + plot2.getName() + " (" + plot2.getSizeSqMeters() + " m²)");
-        System.out.println("  Added: " + plot3.getName() + " (Restricted to herbs only)");
-        System.out.println();
-
-        // register some gardeners
-        System.out.println("▶ Registering Gardeners...");
-        
-        Gardener alice = new Gardener("G001", "Alice Johnson", "alice@email.com", "555-1234");
-        Gardener bob = new Gardener("G002", "Bob Smith", "bob@email.com", "555-5678");
-        Gardener carol = new Gardener("G003", "Carol Davis");
-        
-        system.registerGardener(alice);
-        system.registerGardener(bob);
-        system.registerGardener(carol);
-        
-        System.out.println("  Registered: " + alice.getName());
-        System.out.println("  Registered: " + bob.getName());
-        System.out.println("  Registered: " + carol.getName());
-        System.out.println();
-
-        // set up the crops people can plant
-        System.out.println("▶ Defining Available Crops...");
-        
-        Crop tomatoes = new Crop("Tomatoes", 90, 
+        // Set up available crops
+        availableCrops = new ArrayList<>();
+        availableCrops.add(new Crop("Tomatoes", 90, 
             new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.SUMMER)),
-            "Requires full sun and regular watering");
-        Crop lettuce = new Crop("Lettuce", 45,
+            "Requires full sun and regular watering"));
+        availableCrops.add(new Crop("Lettuce", 45,
             new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.FALL)),
-            "Cool weather crop");
-        Crop basil = new Crop("Basil", 60,
+            "Cool weather crop"));
+        availableCrops.add(new Crop("Basil", 60,
             new HashSet<>(Arrays.asList(Crop.Season.SUMMER)),
-            "Aromatic herb");
-        Crop carrots = new Crop("Carrots", 70);
-        
-        System.out.println("  Defined: " + tomatoes);
-        System.out.println("  Defined: " + lettuce);
-        System.out.println("  Defined: " + basil);
-        System.out.println("  Defined: " + carrots);
+            "Aromatic herb"));
+        availableCrops.add(new Crop("Carrots", 70,
+            new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.FALL)),
+            "Root vegetable"));
+        availableCrops.add(new Crop("Peppers", 80,
+            new HashSet<>(Arrays.asList(Crop.Season.SUMMER)),
+            "Needs warm weather"));
+        availableCrops.add(new Crop("Mint", 50,
+            new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.SUMMER)),
+            "Fast-growing herb"));
+        availableCrops.add(new Crop("Rosemary", 90,
+            new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.SUMMER, Crop.Season.FALL)),
+            "Perennial herb"));
+        availableCrops.add(new Crop("Cucumbers", 60,
+            new HashSet<>(Arrays.asList(Crop.Season.SUMMER)),
+            "Needs consistent watering"));
+        availableCrops.add(new Crop("Spinach", 40,
+            new HashSet<>(Arrays.asList(Crop.Season.SPRING, Crop.Season.FALL)),
+            "Cool weather leafy green"));
+        availableCrops.add(new Crop("Zucchini", 50,
+            new HashSet<>(Arrays.asList(Crop.Season.SUMMER)),
+            "Prolific producer"));
+    }
+
+    private static void printWelcome() {
         System.out.println();
-
-        // create some date ranges for bookings
-        System.out.println("▶ Setting up Reservation Periods...");
-        
-        DateRange springPeriod = new DateRange(
-            LocalDate.of(2025, 3, 1),
-            LocalDate.of(2025, 5, 31)
-        );
-        DateRange summerPeriod = new DateRange(
-            LocalDate.of(2025, 6, 1),
-            LocalDate.of(2025, 8, 31)
-        );
-        DateRange overlappingPeriod = new DateRange(
-            LocalDate.of(2025, 4, 15),
-            LocalDate.of(2025, 6, 15)
-        );
-        
-        System.out.println("  Spring Period: " + springPeriod + " (" + springPeriod.lengthInDays() + " days)");
-        System.out.println("  Summer Period: " + summerPeriod + " (" + summerPeriod.lengthInDays() + " days)");
-        System.out.println("  Overlapping Period: " + overlappingPeriod);
-        System.out.println("  Do Spring and Summer overlap? " + springPeriod.overlaps(summerPeriod));
-        System.out.println("  Do Spring and Overlapping overlap? " + springPeriod.overlaps(overlappingPeriod));
-        System.out.println();
-
-        // make some reservations
-        System.out.println("▶ Creating Reservations...\n");
-        
-        // Alice reserves Sunny Corner for Spring
-        List<Crop> aliceCrops = Arrays.asList(tomatoes, lettuce);
-        Reservation res1 = system.createReservation("P001", "G001", springPeriod, aliceCrops);
-        if (res1 != null) {
-            System.out.println("  ✓ Created: " + res1.getReservationID() + " for " + alice.getName());
-            System.out.println("    Plot: " + res1.getPlot().getName());
-            System.out.println("    Status: " + res1.getStatus());
-        }
-
-        // Bob reserves Shady Grove for Summer
-        List<Crop> bobCrops = Arrays.asList(carrots);
-        Reservation res2 = system.createReservation("P002", "G002", summerPeriod, bobCrops);
-        if (res2 != null) {
-            System.out.println("  ✓ Created: " + res2.getReservationID() + " for " + bob.getName());
-            System.out.println("    Status: " + res2.getStatus());
-        }
-
-        // Carol tries to reserve Herb Garden with non-herb crop (should fail)
-        System.out.println("\n  Attempting to book Herb Garden with Tomatoes...");
-        Reservation res3 = system.createReservation("P003", "G003", springPeriod, Arrays.asList(tomatoes));
-        if (res3 == null) {
-            System.out.println("  ✗ Failed: Tomatoes not allowed in Herb Garden");
-        }
-
-        // Carol reserves Herb Garden with herbs (should succeed)
-        List<Crop> herbCrops = Arrays.asList(basil);
-        Reservation res4 = system.createReservation("P003", "G003", springPeriod, herbCrops);
-        if (res4 != null) {
-            System.out.println("  ✓ Created: " + res4.getReservationID() + " for " + carol.getName());
-        }
-        System.out.println();
-
-        // confirm the reservations
-        System.out.println("▶ Confirming Reservations...\n");
-        
-        system.confirmReservation(res1.getReservationID());
-        System.out.println("  ✓ Confirmed: " + res1.getReservationID() + " -> " + res1.getStatus());
-        
-        system.confirmReservation(res2.getReservationID());
-        System.out.println("  ✓ Confirmed: " + res2.getReservationID() + " -> " + res2.getStatus());
-        
-        System.out.println();
-
-        // try to double-book (should fail)
-        System.out.println("▶ Testing Conflict Detection...\n");
-        
-        System.out.println("  Attempting to book Sunny Corner during overlapping period...");
-        Reservation conflictRes = system.createReservation("P001", "G002", overlappingPeriod, null);
-        if (conflictRes == null) {
-            System.out.println("  ✗ Failed: Correctly detected overlap with existing reservation");
-        }
-        System.out.println();
-
-        // see what's available
-        System.out.println("▶ Checking Plot Availability...\n");
-        
-        List<GardenPlot> availableForSummer = system.findAvailablePlots(summerPeriod);
-        System.out.println("  Available plots for Summer 2025:");
-        for (GardenPlot plot : availableForSummer) {
-            System.out.println("    - " + plot.getName() + " (" + plot.getPlotID() + ")");
-        }
-        System.out.println();
-
-        // cancel one
-        System.out.println("▶ Cancelling a Reservation...\n");
-        
-        System.out.println("  Before cancellation: " + res4.getStatus());
-        system.cancelReservation(res4.getReservationID());
-        System.out.println("  After cancellation: " + res4.getStatus());
-        System.out.println();
-
-        // mark one as done
-        System.out.println("▶ Completing a Reservation...\n");
-        
-        System.out.println("  Before completion: " + res2.getStatus());
-        system.completeReservation(res2.getReservationID());
-        System.out.println("  After completion: " + res2.getStatus());
-        System.out.println();
-
-        // print out reports
-        System.out.println("▶ Generating Reports...\n");
-        System.out.println(system.generatePlantingReport());
-        System.out.println(system.generateAvailabilityReport());
-
-        // show what OOP stuff we used
         System.out.println("╔═══════════════════════════════════════════════════════╗");
-        System.out.println("║              OOP TECHNIQUES DEMONSTRATED              ║");
-        System.out.println("╚═══════════════════════════════════════════════════════╝\n");
-        
-        System.out.println("1. ENCAPSULATION:");
-        System.out.println("   - All fields are private with getters/setters");
-        System.out.println("   - Internal lists return unmodifiable views");
-        System.out.println("   - Package-private methods for internal operations");
+        System.out.println("║     GARDENMATE - Community Garden Reservation System  ║");
+        System.out.println("╚═══════════════════════════════════════════════════════╝");
         System.out.println();
-        
-        System.out.println("2. IMMUTABILITY (Value Objects):");
-        System.out.println("   - DateRange: immutable with final fields");
-        System.out.println("   - Crop: immutable with defensive copying of collections");
-        System.out.println();
-        
-        System.out.println("3. ENUM with Behavior:");
-        System.out.println("   - ReservationStatus has canTransitionTo(), isActive(), occupiesPlot()");
-        System.out.println("   - Encapsulates state machine logic");
-        System.out.println();
-        
-        System.out.println("4. FACADE Pattern:");
-        System.out.println("   - GardenSystem provides simplified interface to complex subsystem");
-        System.out.println("   - Coordinates Gardeners, Plots, and Reservations");
-        System.out.println();
-        
-        System.out.println("5. STATE Pattern (via enum):");
-        System.out.println("   - ReservationStatus controls valid transitions");
-        System.out.println("   - Reservation.confirm(), cancel(), complete() methods");
-        System.out.println();
-        
-        System.out.println("6. COMPOSITION:");
-        System.out.println("   - Reservation contains Gardener, GardenPlot, DateRange, List<Crop>");
-        System.out.println("   - GardenPlot manages its own reservations list");
-        System.out.println();
-        
-        System.out.println("7. VALIDATION & DEFENSIVE PROGRAMMING:");
-        System.out.println("   - Constructor validation with IllegalArgumentException");
-        System.out.println("   - Null checks throughout");
-        System.out.println("   - Business rule enforcement (crop restrictions, overlaps)");
-        System.out.println();
-        
-        System.out.println("8. equals() / hashCode() / toString():");
-        System.out.println("   - Proper implementations for object comparison");
-        System.out.println("   - Identity based on IDs for entities");
-        System.out.println("   - Value-based for value objects (DateRange, Crop)");
-        System.out.println();
+    }
 
-        System.out.println("═══════════════════════════════════════════════════════");
-        System.out.println("                    DEMO COMPLETE!                      ");
-        System.out.println("═══════════════════════════════════════════════════════");
+    private static boolean showLoginMenu() {
+        System.out.println("┌───────────────────────────────────────────────────────┐");
+        System.out.println("│                    WELCOME MENU                       │");
+        System.out.println("├───────────────────────────────────────────────────────┤");
+        System.out.println("│  1. Register as New Gardener                          │");
+        System.out.println("│  2. Login (Existing Gardener)                         │");
+        System.out.println("│  3. View All Plots                                    │");
+        System.out.println("│  4. Exit                                              │");
+        System.out.println("└───────────────────────────────────────────────────────┘");
+        System.out.print("Enter your choice: ");
+        
+        String choice = scanner.nextLine().trim();
+        
+        switch (choice) {
+            case "1":
+                registerNewGardener();
+                break;
+            case "2":
+                loginGardener();
+                break;
+            case "3":
+                viewAllPlots();
+                break;
+            case "4":
+                return false;
+            default:
+                System.out.println("\n⚠ Invalid choice. Please try again.\n");
+        }
+        return true;
+    }
+
+    private static boolean showMainMenu() {
+        System.out.println("\n┌───────────────────────────────────────────────────────┐");
+        System.out.println("│                     MAIN MENU                         │");
+        System.out.println("│         Welcome, " + padRight(currentGardener.getName(), 20) + "           │");
+        System.out.println("├───────────────────────────────────────────────────────┤");
+        System.out.println("│  1. View Available Plots                              │");
+        System.out.println("│  2. Make a Reservation                                │");
+        System.out.println("│  3. View My Reservations                              │");
+        System.out.println("│  4. Cancel a Reservation                              │");
+        System.out.println("│  5. View Available Crops                              │");
+        System.out.println("│  6. View All Plots                                    │");
+        System.out.println("│  7. View My Profile                                   │");
+        System.out.println("│  8. Update My Profile                                 │");
+        System.out.println("│  9. Logout                                            │");
+        System.out.println("│  0. Exit                                              │");
+        System.out.println("└───────────────────────────────────────────────────────┘");
+        System.out.print("Enter your choice: ");
+        
+        String choice = scanner.nextLine().trim();
+        
+        switch (choice) {
+            case "1":
+                viewAvailablePlots();
+                break;
+            case "2":
+                makeReservation();
+                break;
+            case "3":
+                viewMyReservations();
+                break;
+            case "4":
+                cancelReservation();
+                break;
+            case "5":
+                viewAvailableCrops();
+                break;
+            case "6":
+                viewAllPlots();
+                break;
+            case "7":
+                viewMyProfile();
+                break;
+            case "8":
+                updateMyProfile();
+                break;
+            case "9":
+                logout();
+                break;
+            case "0":
+                return false;
+            default:
+                System.out.println("\n⚠ Invalid choice. Please try again.");
+        }
+        return true;
+    }
+
+    private static void registerNewGardener() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         REGISTER NEW GARDENER          ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        System.out.print("Enter your full name: ");
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) {
+            System.out.println("\n⚠ Name cannot be empty. Registration cancelled.");
+            return;
+        }
+        
+        System.out.print("Enter your email (optional, press Enter to skip): ");
+        String email = scanner.nextLine().trim();
+        if (email.isEmpty()) email = null;
+        
+        System.out.print("Enter your phone number (optional, press Enter to skip): ");
+        String phone = scanner.nextLine().trim();
+        if (phone.isEmpty()) phone = null;
+        
+        // Generate unique ID
+        String gardenerId = "G" + String.format("%03d", system.getGardeners().size() + 1);
+        
+        Gardener newGardener = new Gardener(gardenerId, name, email, phone);
+        
+        if (system.registerGardener(newGardener)) {
+            currentGardener = newGardener;
+            System.out.println("\n✓ Registration successful!");
+            System.out.println("  Your Gardener ID: " + gardenerId);
+            System.out.println("  You are now logged in as: " + name);
+        } else {
+            System.out.println("\n✗ Registration failed. Please try again.");
+        }
+    }
+
+    private static void loginGardener() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("              LOGIN                      ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        if (system.getGardeners().isEmpty()) {
+            System.out.println("No gardeners registered yet. Please register first.");
+            return;
+        }
+        
+        System.out.println("Registered Gardeners:");
+        for (Gardener g : system.getGardeners()) {
+            System.out.println("  " + g.getGardenerID() + " - " + g.getName());
+        }
+        
+        System.out.print("\nEnter your Gardener ID: ");
+        String gardenerId = scanner.nextLine().trim().toUpperCase();
+        
+        Gardener gardener = system.findGardenerById(gardenerId);
+        if (gardener != null) {
+            currentGardener = gardener;
+            System.out.println("\n✓ Welcome back, " + gardener.getName() + "!");
+        } else {
+            System.out.println("\n✗ Gardener not found. Please check your ID or register.");
+        }
+    }
+
+    private static void logout() {
+        System.out.println("\n✓ Logged out successfully. Goodbye, " + currentGardener.getName() + "!");
+        currentGardener = null;
+    }
+
+    private static void viewAllPlots() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         ALL GARDEN PLOTS               ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        for (GardenPlot plot : system.getPlots()) {
+            System.out.println("┌─────────────────────────────────────┐");
+            System.out.println("│ " + padRight(plot.getName() + " (" + plot.getPlotID() + ")", 35) + " │");
+            System.out.println("├─────────────────────────────────────┤");
+            System.out.println("│ Size: " + padRight(plot.getSizeSqMeters() + " m²", 29) + " │");
+            System.out.println("│ Location: " + padRight(plot.getLocation() != null ? plot.getLocation() : "N/A", 25) + " │");
+            System.out.println("│ Status: " + padRight(plot.isCurrentlyOccupied() ? "OCCUPIED" : "AVAILABLE", 27) + " │");
+            if (!plot.getAllowedCrops().isEmpty()) {
+                System.out.println("│ Restricted to: " + padRight(plot.getAllowedCrops().toString(), 19) + " │");
+            }
+            System.out.println("└─────────────────────────────────────┘");
+        }
+    }
+
+    private static void viewAvailablePlots() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("      CHECK PLOT AVAILABILITY           ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        DateRange dateRange = getDateRangeFromUser();
+        if (dateRange == null) return;
+        
+        List<GardenPlot> available = system.findAvailablePlots(dateRange);
+        
+        if (available.isEmpty()) {
+            System.out.println("\n⚠ No plots available for the selected period.");
+        } else {
+            System.out.println("\n✓ Available plots for " + dateRange + ":\n");
+            for (GardenPlot plot : available) {
+                System.out.println("  • " + plot.getName() + " (" + plot.getPlotID() + ")");
+                System.out.println("    Size: " + plot.getSizeSqMeters() + " m² | Location: " + 
+                    (plot.getLocation() != null ? plot.getLocation() : "N/A"));
+                if (!plot.getAllowedCrops().isEmpty()) {
+                    System.out.println("    Restricted to: " + plot.getAllowedCrops());
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    private static void makeReservation() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         MAKE A RESERVATION             ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        // Check if gardener has reached max reservations
+        if (currentGardener.getActiveReservationCount() >= 3) {
+            System.out.println("⚠ You have reached the maximum number of active reservations (3).");
+            System.out.println("  Please cancel or complete an existing reservation first.");
+            return;
+        }
+        
+        // Get date range
+        System.out.println("Step 1: Select your reservation period");
+        DateRange dateRange = getDateRangeFromUser();
+        if (dateRange == null) return;
+        
+        // Show available plots
+        List<GardenPlot> available = system.findAvailablePlots(dateRange);
+        if (available.isEmpty()) {
+            System.out.println("\n⚠ No plots available for the selected period.");
+            return;
+        }
+        
+        System.out.println("\nStep 2: Select a plot");
+        System.out.println("Available plots for " + dateRange + ":");
+        for (int i = 0; i < available.size(); i++) {
+            GardenPlot plot = available.get(i);
+            System.out.println("  " + (i + 1) + ". " + plot.getName() + " (" + plot.getPlotID() + ")");
+            System.out.println("     Size: " + plot.getSizeSqMeters() + " m² | Location: " + 
+                (plot.getLocation() != null ? plot.getLocation() : "N/A"));
+            if (!plot.getAllowedCrops().isEmpty()) {
+                System.out.println("     Restricted to: " + plot.getAllowedCrops());
+            }
+        }
+        
+        System.out.print("\nEnter plot number (or 0 to cancel): ");
+        int plotChoice;
+        try {
+            plotChoice = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("\n⚠ Invalid input. Reservation cancelled.");
+            return;
+        }
+        
+        if (plotChoice == 0) {
+            System.out.println("Reservation cancelled.");
+            return;
+        }
+        
+        if (plotChoice < 1 || plotChoice > available.size()) {
+            System.out.println("\n⚠ Invalid plot number. Reservation cancelled.");
+            return;
+        }
+        
+        GardenPlot selectedPlot = available.get(plotChoice - 1);
+        
+        // Select crops
+        System.out.println("\nStep 3: Select crops to plant (optional)");
+        List<Crop> selectedCrops = selectCrops(selectedPlot);
+        
+        // Confirm reservation
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         CONFIRM RESERVATION            ");
+        System.out.println("═══════════════════════════════════════");
+        System.out.println("  Plot: " + selectedPlot.getName());
+        System.out.println("  Period: " + dateRange);
+        System.out.println("  Duration: " + dateRange.lengthInDays() + " days");
+        System.out.print("  Crops: ");
+        if (selectedCrops.isEmpty()) {
+            System.out.println("None specified");
+        } else {
+            for (int i = 0; i < selectedCrops.size(); i++) {
+                if (i > 0) System.out.print(", ");
+                System.out.print(selectedCrops.get(i).getName());
+            }
+            System.out.println();
+        }
+        System.out.println("═══════════════════════════════════════");
+        
+        System.out.print("\nConfirm reservation? (yes/no): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirm.equals("yes") || confirm.equals("y")) {
+            Reservation reservation = system.createReservation(
+                selectedPlot.getPlotID(),
+                currentGardener.getGardenerID(),
+                dateRange,
+                selectedCrops.isEmpty() ? null : selectedCrops
+            );
+            
+            if (reservation != null) {
+                // Auto-confirm the reservation
+                system.confirmReservation(reservation.getReservationID());
+                System.out.println("\n✓ Reservation created and confirmed successfully!");
+                System.out.println("  Reservation ID: " + reservation.getReservationID());
+                System.out.println("  Status: " + reservation.getStatus());
+            } else {
+                System.out.println("\n✗ Failed to create reservation. Please try again.");
+            }
+        } else {
+            System.out.println("Reservation cancelled.");
+        }
+    }
+
+    private static List<Crop> selectCrops(GardenPlot plot) {
+        List<Crop> selectedCrops = new ArrayList<>();
+        
+        // Filter crops based on plot restrictions
+        List<Crop> allowedCrops = new ArrayList<>();
+        for (Crop crop : availableCrops) {
+            if (plot.isCropAllowed(crop)) {
+                allowedCrops.add(crop);
+            }
+        }
+        
+        if (allowedCrops.isEmpty()) {
+            System.out.println("No crops available for this plot.");
+            return selectedCrops;
+        }
+        
+        System.out.println("Available crops for this plot:");
+        for (int i = 0; i < allowedCrops.size(); i++) {
+            Crop crop = allowedCrops.get(i);
+            System.out.println("  " + (i + 1) + ". " + crop.getName() + 
+                " (min " + crop.getMinGrowingDays() + " days)");
+        }
+        System.out.println("  0. Skip crop selection");
+        
+        System.out.println("\nEnter crop numbers separated by commas (e.g., 1,3,5) or 0 to skip:");
+        System.out.print("Your selection: ");
+        String input = scanner.nextLine().trim();
+        
+        if (input.equals("0") || input.isEmpty()) {
+            return selectedCrops;
+        }
+        
+        String[] choices = input.split(",");
+        for (String choice : choices) {
+            try {
+                int cropNum = Integer.parseInt(choice.trim());
+                if (cropNum >= 1 && cropNum <= allowedCrops.size()) {
+                    Crop crop = allowedCrops.get(cropNum - 1);
+                    if (!selectedCrops.contains(crop)) {
+                        selectedCrops.add(crop);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Skip invalid input
+            }
+        }
+        
+        return selectedCrops;
+    }
+
+    private static void viewMyReservations() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         MY RESERVATIONS                ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        List<Reservation> reservations = system.getReservationsForGardener(currentGardener.getGardenerID());
+        
+        if (reservations.isEmpty()) {
+            System.out.println("You have no reservations.");
+            return;
+        }
+        
+        System.out.println("Active Reservations:");
+        System.out.println("─────────────────────────────────────────");
+        boolean hasActive = false;
+        for (Reservation res : reservations) {
+            if (res.isActive()) {
+                hasActive = true;
+                printReservationDetails(res);
+            }
+        }
+        if (!hasActive) {
+            System.out.println("  No active reservations.\n");
+        }
+        
+        System.out.println("Past Reservations:");
+        System.out.println("─────────────────────────────────────────");
+        boolean hasPast = false;
+        for (Reservation res : reservations) {
+            if (!res.isActive()) {
+                hasPast = true;
+                printReservationDetails(res);
+            }
+        }
+        if (!hasPast) {
+            System.out.println("  No past reservations.\n");
+        }
+    }
+
+    private static void printReservationDetails(Reservation res) {
+        System.out.println("  ID: " + res.getReservationID());
+        System.out.println("  Plot: " + res.getPlot().getName());
+        System.out.println("  Period: " + res.getDateRange());
+        System.out.println("  Status: " + res.getStatus() + " - " + res.getStatus().getDescription());
+        List<Crop> crops = res.getPlantingPlan();
+        System.out.print("  Crops: ");
+        if (crops.isEmpty()) {
+            System.out.println("None specified");
+        } else {
+            for (int i = 0; i < crops.size(); i++) {
+                if (i > 0) System.out.print(", ");
+                System.out.print(crops.get(i).getName());
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    private static void cancelReservation() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("        CANCEL A RESERVATION            ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        List<Reservation> activeReservations = currentGardener.getActiveReservations();
+        
+        if (activeReservations.isEmpty()) {
+            System.out.println("You have no active reservations to cancel.");
+            return;
+        }
+        
+        System.out.println("Your active reservations:");
+        for (int i = 0; i < activeReservations.size(); i++) {
+            Reservation res = activeReservations.get(i);
+            System.out.println("  " + (i + 1) + ". " + res.getReservationID() + " - " + 
+                res.getPlot().getName() + " (" + res.getDateRange() + ")");
+        }
+        
+        System.out.print("\nEnter number to cancel (or 0 to go back): ");
+        int choice;
+        try {
+            choice = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("\n⚠ Invalid input.");
+            return;
+        }
+        
+        if (choice == 0) return;
+        
+        if (choice < 1 || choice > activeReservations.size()) {
+            System.out.println("\n⚠ Invalid selection.");
+            return;
+        }
+        
+        Reservation toCancel = activeReservations.get(choice - 1);
+        
+        System.out.print("Are you sure you want to cancel reservation " + 
+            toCancel.getReservationID() + "? (yes/no): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirm.equals("yes") || confirm.equals("y")) {
+            if (system.cancelReservation(toCancel.getReservationID())) {
+                System.out.println("\n✓ Reservation cancelled successfully.");
+            } else {
+                System.out.println("\n✗ Failed to cancel reservation.");
+            }
+        } else {
+            System.out.println("Cancellation aborted.");
+        }
+    }
+
+    private static void viewAvailableCrops() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         AVAILABLE CROPS                ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        for (Crop crop : availableCrops) {
+            System.out.println("┌─────────────────────────────────────┐");
+            System.out.println("│ " + padRight(crop.getName(), 35) + " │");
+            System.out.println("├─────────────────────────────────────┤");
+            System.out.println("│ Min Growing Days: " + padRight(String.valueOf(crop.getMinGrowingDays()), 17) + " │");
+            System.out.println("│ Best Seasons: " + padRight(crop.getBestSeasons().toString(), 21) + " │");
+            if (!crop.getDescription().isEmpty()) {
+                System.out.println("│ " + padRight(crop.getDescription(), 35) + " │");
+            }
+            System.out.println("└─────────────────────────────────────┘");
+        }
+    }
+
+    private static void viewMyProfile() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("           MY PROFILE                   ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        System.out.println(currentGardener.toDetailedString());
+        System.out.println("\nReservation Summary:");
+        System.out.println("  Total Reservations: " + currentGardener.getReservations().size());
+        System.out.println("  Active Reservations: " + currentGardener.getActiveReservationCount());
+        System.out.println("  Remaining Slots: " + (3 - currentGardener.getActiveReservationCount()));
+    }
+
+    private static void updateMyProfile() {
+        System.out.println("\n═══════════════════════════════════════");
+        System.out.println("         UPDATE PROFILE                 ");
+        System.out.println("═══════════════════════════════════════\n");
+        
+        System.out.println("Current Information:");
+        System.out.println("  Name: " + currentGardener.getName());
+        System.out.println("  Email: " + (currentGardener.getEmail() != null ? currentGardener.getEmail() : "Not set"));
+        System.out.println("  Phone: " + (currentGardener.getPhoneNumber() != null ? currentGardener.getPhoneNumber() : "Not set"));
+        
+        System.out.println("\nWhat would you like to update?");
+        System.out.println("  1. Name");
+        System.out.println("  2. Email");
+        System.out.println("  3. Phone Number");
+        System.out.println("  0. Cancel");
+        
+        System.out.print("\nEnter your choice: ");
+        String choice = scanner.nextLine().trim();
+        
+        switch (choice) {
+            case "1":
+                System.out.print("Enter new name: ");
+                String newName = scanner.nextLine().trim();
+                if (!newName.isEmpty()) {
+                    currentGardener.setName(newName);
+                    System.out.println("✓ Name updated successfully.");
+                }
+                break;
+            case "2":
+                System.out.print("Enter new email: ");
+                String newEmail = scanner.nextLine().trim();
+                currentGardener.setEmail(newEmail.isEmpty() ? null : newEmail);
+                System.out.println("✓ Email updated successfully.");
+                break;
+            case "3":
+                System.out.print("Enter new phone number: ");
+                String newPhone = scanner.nextLine().trim();
+                currentGardener.setPhoneNumber(newPhone.isEmpty() ? null : newPhone);
+                System.out.println("✓ Phone number updated successfully.");
+                break;
+            case "0":
+                break;
+            default:
+                System.out.println("⚠ Invalid choice.");
+        }
+    }
+
+    private static DateRange getDateRangeFromUser() {
+        System.out.println("Enter dates in format YYYY-MM-DD (e.g., 2025-06-01)");
+        
+        System.out.print("Start date: ");
+        String startStr = scanner.nextLine().trim();
+        
+        System.out.print("End date: ");
+        String endStr = scanner.nextLine().trim();
+        
+        try {
+            LocalDate startDate = LocalDate.parse(startStr, DATE_FORMAT);
+            LocalDate endDate = LocalDate.parse(endStr, DATE_FORMAT);
+            
+            if (startDate.isBefore(LocalDate.now())) {
+                System.out.println("\n⚠ Start date cannot be in the past.");
+                return null;
+            }
+            
+            DateRange range = new DateRange(startDate, endDate);
+            return range;
+        } catch (DateTimeParseException e) {
+            System.out.println("\n⚠ Invalid date format. Please use YYYY-MM-DD.");
+            return null;
+        } catch (IllegalArgumentException e) {
+            System.out.println("\n⚠ " + e.getMessage());
+            return null;
+        }
+    }
+
+    private static String padRight(String s, int n) {
+        if (s == null) s = "";
+        if (s.length() > n) return s.substring(0, n);
+        return String.format("%-" + n + "s", s);
     }
 }
