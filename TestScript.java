@@ -2,7 +2,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+
 import java.util.Set;
 
 /**
@@ -634,11 +634,11 @@ public class TestScript {
         test("addPlot() - null returns false", !system.addPlot(null));
         test("getPlots() - has 2 plots", system.getPlots().size() == 2);
         
-        Optional<GardenPlot> foundPlot = system.findPlotById("P001");
-        test("findPlotById() - found", foundPlot.isPresent());
-        test("findPlotById() - correct plot", foundPlot.get().equals(plot1));
-        test("findPlotById() - not found", !system.findPlotById("P999").isPresent());
-        test("findPlotById() - null", !system.findPlotById(null).isPresent());
+        GardenPlot foundPlot = system.findPlotById("P001");
+        test("findPlotById() - found", foundPlot != null);
+        test("findPlotById() - correct plot", foundPlot.equals(plot1));
+        test("findPlotById() - not found", system.findPlotById("P999") == null);
+        test("findPlotById() - null", system.findPlotById(null) == null);
         
         // Gardener management
         Gardener gardener1 = new Gardener("G001", "Alice", "alice@email.com", "555-1234");
@@ -650,10 +650,10 @@ public class TestScript {
         test("registerGardener() - null returns false", !system.registerGardener(null));
         test("getGardeners() - has 2 gardeners", system.getGardeners().size() == 2);
         
-        Optional<Gardener> foundGardener = system.findGardenerById("G001");
-        test("findGardenerById() - found", foundGardener.isPresent());
-        test("findGardenerById() - correct gardener", foundGardener.get().equals(gardener1));
-        test("findGardenerById() - not found", !system.findGardenerById("G999").isPresent());
+        Gardener foundGardener = system.findGardenerById("G001");
+        test("findGardenerById() - found", foundGardener != null);
+        test("findGardenerById() - correct gardener", foundGardener.equals(gardener1));
+        test("findGardenerById() - not found", system.findGardenerById("G999") == null);
         
         // Availability queries
         LocalDate today = LocalDate.now();
@@ -690,9 +690,9 @@ public class TestScript {
         test("createReservation() - invalid gardener returns null", invalid2 == null);
         
         // Find reservation
-        Optional<Reservation> foundRes = system.findReservationById(res1.getReservationID());
-        test("findReservationById() - found", foundRes.isPresent());
-        test("findReservationById() - not found", !system.findReservationById("R9999").isPresent());
+        Reservation foundRes = system.findReservationById(res1.getReservationID());
+        test("findReservationById() - found", foundRes != null);
+        test("findReservationById() - not found", system.findReservationById("R9999") == null);
         
         // Confirm reservation
         test("confirmReservation() - success", system.confirmReservation(res1.getReservationID()));

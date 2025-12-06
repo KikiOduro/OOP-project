@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 // GardenSystem - main controller that ties everything together
 public class GardenSystem {
@@ -38,7 +37,7 @@ public class GardenSystem {
     public boolean addPlot(GardenPlot plot) {
         if (plot == null) return false;
         
-        if (findPlotById(plot.getPlotID()).isPresent()) {
+        if (findPlotById(plot.getPlotID()) != null) {
             return false; // Already exists
         }
         plots.add(plot);
@@ -46,24 +45,23 @@ public class GardenSystem {
     }
 
     public boolean removePlot(String plotId) {
-        Optional<GardenPlot> plotOpt = findPlotById(plotId);
-        if (!plotOpt.isPresent()) return false;
+        GardenPlot plot = findPlotById(plotId);
+        if (plot == null) return false;
         
-        GardenPlot plot = plotOpt.get();
         if (!plot.getActiveReservations().isEmpty()) {
             return false;
         }
         return plots.remove(plot);
     }
 
-    public Optional<GardenPlot> findPlotById(String plotId) {
-        if (plotId == null) return Optional.empty();
+    public GardenPlot findPlotById(String plotId) {
+        if (plotId == null) return null;
         for (GardenPlot plot : plots) {
             if (plot.getPlotID().equals(plotId)) {
-                return Optional.of(plot);
+                return plot;
             }
         }
-        return Optional.empty();
+        return null;
     }
 
     // gardener management
@@ -71,7 +69,7 @@ public class GardenSystem {
     public boolean registerGardener(Gardener gardener) {
         if (gardener == null) return false;
         
-        if (findGardenerById(gardener.getGardenerID()).isPresent()) {
+        if (findGardenerById(gardener.getGardenerID()) != null) {
             return false; // Already registered
         }
         gardeners.add(gardener);
@@ -79,24 +77,23 @@ public class GardenSystem {
     }
 
     public boolean removeGardener(String gardenerId) {
-        Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
-        if (!gardenerOpt.isPresent()) return false;
+        Gardener gardener = findGardenerById(gardenerId);
+        if (gardener == null) return false;
         
-        Gardener gardener = gardenerOpt.get();
         if (gardener.hasActiveReservations()) {
             return false;
         }
         return gardeners.remove(gardener);
     }
 
-    public Optional<Gardener> findGardenerById(String gardenerId) {
-        if (gardenerId == null) return Optional.empty();
+    public Gardener findGardenerById(String gardenerId) {
+        if (gardenerId == null) return null;
         for (Gardener g : gardeners) {
             if (g.getGardenerID().equals(gardenerId)) {
-                return Optional.of(g);
+                return g;
             }
         }
-        return Optional.empty();
+        return null;
     }
 
     // availability queries
@@ -127,8 +124,8 @@ public class GardenSystem {
     }
 
     public boolean isPlotAvailable(String plotId, DateRange range) {
-        Optional<GardenPlot> plotOpt = findPlotById(plotId);
-        return plotOpt.isPresent() && plotOpt.get().isAvailable(range);
+        GardenPlot plot = findPlotById(plotId);
+        return plot != null && plot.isAvailable(range);
     }
 
     // reservation management
@@ -142,20 +139,17 @@ public class GardenSystem {
             return null;
         }
 
-        Optional<GardenPlot> plotOpt = findPlotById(plotId);
-        Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
+        GardenPlot plot = findPlotById(plotId);
+        Gardener gardener = findGardenerById(gardenerId);
 
-        if (!plotOpt.isPresent()) {
+        if (plot == null) {
             System.out.println("Error: Plot not found - " + plotId);
             return null;
         }
-        if (!gardenerOpt.isPresent()) {
+        if (gardener == null) {
             System.out.println("Error: Gardener not found - " + gardenerId);
             return null;
         }
-
-        GardenPlot plot = plotOpt.get();
-        Gardener gardener = gardenerOpt.get();
 
         if (gardener.getActiveReservationCount() >= MAX_ACTIVE_RESERVATIONS_PER_GARDENER) {
             System.out.println("Error: Gardener has reached maximum active reservations.");
@@ -203,13 +197,11 @@ public class GardenSystem {
     }
 
     public boolean confirmReservation(String reservationId) {
-        Optional<Reservation> resOpt = findReservationById(reservationId);
-        if (!resOpt.isPresent()) {
+        Reservation reservation = findReservationById(reservationId);
+        if (reservation == null) {
             System.out.println("Error: Reservation not found - " + reservationId);
             return false;
         }
-
-        Reservation reservation = resOpt.get();
         
         if (!reservation.getPlot().isAvailable(reservation.getDateRange())) {
             System.out.println("Error: Plot is no longer available for the requested dates.");
@@ -227,13 +219,11 @@ public class GardenSystem {
     }
 
     public boolean cancelReservation(String reservationId) {
-        Optional<Reservation> resOpt = findReservationById(reservationId);
-        if (!resOpt.isPresent()) {
+        Reservation reservation = findReservationById(reservationId);
+        if (reservation == null) {
             System.out.println("Error: Reservation not found - " + reservationId);
             return false;
         }
-
-        Reservation reservation = resOpt.get();
         try {
             reservation.cancel();
             reservation.getPlot().release();
@@ -245,13 +235,11 @@ public class GardenSystem {
     }
 
     public boolean completeReservation(String reservationId) {
-        Optional<Reservation> resOpt = findReservationById(reservationId);
-        if (!resOpt.isPresent()) {
+        Reservation reservation = findReservationById(reservationId);
+        if (reservation == null) {
             System.out.println("Error: Reservation not found - " + reservationId);
             return false;
         }
-
-        Reservation reservation = resOpt.get();
         try {
             reservation.complete();
             reservation.getPlot().release();
@@ -262,14 +250,14 @@ public class GardenSystem {
         }
     }
 
-    public Optional<Reservation> findReservationById(String reservationId) {
-        if (reservationId == null) return Optional.empty();
+    public Reservation findReservationById(String reservationId) {
+        if (reservationId == null) return null;
         for (Reservation res : reservations) {
             if (res.getReservationID().equals(reservationId)) {
-                return Optional.of(res);
+                return res;
             }
         }
-        return Optional.empty();
+        return null;
     }
 
     public List<Reservation> getActiveReservations() {
@@ -284,18 +272,18 @@ public class GardenSystem {
 
     public List<Reservation> getReservationsForGardener(String gardenerId) {
         List<Reservation> result = new ArrayList<>();
-        Optional<Gardener> gardenerOpt = findGardenerById(gardenerId);
-        if (gardenerOpt.isPresent()) {
-            result.addAll(gardenerOpt.get().getReservations());
+        Gardener gardener = findGardenerById(gardenerId);
+        if (gardener != null) {
+            result.addAll(gardener.getReservations());
         }
         return result;
     }
 
     public List<Reservation> getReservationsForPlot(String plotId) {
         List<Reservation> result = new ArrayList<>();
-        Optional<GardenPlot> plotOpt = findPlotById(plotId);
-        if (plotOpt.isPresent()) {
-            result.addAll(plotOpt.get().getReservations());
+        GardenPlot plot = findPlotById(plotId);
+        if (plot != null) {
+            result.addAll(plot.getReservations());
         }
         return result;
     }
