@@ -3,25 +3,18 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-/**
- * Main demonstration class for the GardenMate Reservation System.
- * Shows how all the classes work together in an end-to-end scenario.
- */
+// demo showing how the whole system works together
 public class Main {
     public static void main(String[] args) {
         System.out.println("╔═══════════════════════════════════════════════════════╗");
         System.out.println("║     GARDENMATE - Community Garden Reservation System  ║");
         System.out.println("╚═══════════════════════════════════════════════════════╝\n");
 
-        // ============================================================
-        // 1. CREATE THE GARDEN SYSTEM (Facade Pattern)
-        // ============================================================
+        // start up the system
         System.out.println("▶ Initializing GardenMate System...\n");
         GardenSystem system = new GardenSystem();
 
-        // ============================================================
-        // 2. ADD GARDEN PLOTS
-        // ============================================================
+        // add some plots
         System.out.println("▶ Setting up Garden Plots...");
         
         GardenPlot plot1 = new GardenPlot("P001", "Sunny Corner", 25.0, "North Section");
@@ -43,9 +36,7 @@ public class Main {
         System.out.println("  Added: " + plot3.getName() + " (Restricted to herbs only)");
         System.out.println();
 
-        // ============================================================
-        // 3. REGISTER GARDENERS
-        // ============================================================
+        // register some gardeners
         System.out.println("▶ Registering Gardeners...");
         
         Gardener alice = new Gardener("G001", "Alice Johnson", "alice@email.com", "555-1234");
@@ -61,9 +52,7 @@ public class Main {
         System.out.println("  Registered: " + carol.getName());
         System.out.println();
 
-        // ============================================================
-        // 4. CREATE CROPS (Value Objects with Immutability)
-        // ============================================================
+        // set up the crops people can plant
         System.out.println("▶ Defining Available Crops...");
         
         Crop tomatoes = new Crop("Tomatoes", 90, 
@@ -83,9 +72,7 @@ public class Main {
         System.out.println("  Defined: " + carrots);
         System.out.println();
 
-        // ============================================================
-        // 5. CREATE DATE RANGES (Immutable Value Objects)
-        // ============================================================
+        // create some date ranges for bookings
         System.out.println("▶ Setting up Reservation Periods...");
         
         DateRange springPeriod = new DateRange(
@@ -108,9 +95,7 @@ public class Main {
         System.out.println("  Do Spring and Overlapping overlap? " + springPeriod.overlaps(overlappingPeriod));
         System.out.println();
 
-        // ============================================================
-        // 6. CREATE RESERVATIONS (State Pattern for Status)
-        // ============================================================
+        // make some reservations
         System.out.println("▶ Creating Reservations...\n");
         
         // Alice reserves Sunny Corner for Spring
@@ -145,9 +130,7 @@ public class Main {
         }
         System.out.println();
 
-        // ============================================================
-        // 7. CONFIRM RESERVATIONS (Status Transitions)
-        // ============================================================
+        // confirm the reservations
         System.out.println("▶ Confirming Reservations...\n");
         
         system.confirmReservation(res1.getReservationID());
@@ -158,9 +141,7 @@ public class Main {
         
         System.out.println();
 
-        // ============================================================
-        // 8. TEST CONFLICT DETECTION
-        // ============================================================
+        // try to double-book (should fail)
         System.out.println("▶ Testing Conflict Detection...\n");
         
         System.out.println("  Attempting to book Sunny Corner during overlapping period...");
@@ -170,9 +151,7 @@ public class Main {
         }
         System.out.println();
 
-        // ============================================================
-        // 9. CHECK AVAILABILITY
-        // ============================================================
+        // see what's available
         System.out.println("▶ Checking Plot Availability...\n");
         
         List<GardenPlot> availableForSummer = system.findAvailablePlots(summerPeriod);
@@ -182,9 +161,7 @@ public class Main {
         }
         System.out.println();
 
-        // ============================================================
-        // 10. CANCEL A RESERVATION
-        // ============================================================
+        // cancel one
         System.out.println("▶ Cancelling a Reservation...\n");
         
         System.out.println("  Before cancellation: " + res4.getStatus());
@@ -192,9 +169,7 @@ public class Main {
         System.out.println("  After cancellation: " + res4.getStatus());
         System.out.println();
 
-        // ============================================================
-        // 11. COMPLETE A RESERVATION
-        // ============================================================
+        // mark one as done
         System.out.println("▶ Completing a Reservation...\n");
         
         System.out.println("  Before completion: " + res2.getStatus());
@@ -202,16 +177,12 @@ public class Main {
         System.out.println("  After completion: " + res2.getStatus());
         System.out.println();
 
-        // ============================================================
-        // 12. GENERATE REPORTS
-        // ============================================================
+        // print out reports
         System.out.println("▶ Generating Reports...\n");
         System.out.println(system.generatePlantingReport());
         System.out.println(system.generateAvailabilityReport());
 
-        // ============================================================
-        // 13. DEMONSTRATE OOP TECHNIQUES
-        // ============================================================
+        // show what OOP stuff we used
         System.out.println("╔═══════════════════════════════════════════════════════╗");
         System.out.println("║              OOP TECHNIQUES DEMONSTRATED              ║");
         System.out.println("╚═══════════════════════════════════════════════════════╝\n");
