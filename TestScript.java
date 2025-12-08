@@ -37,7 +37,7 @@ public class TestScript {
         System.out.println("  RESULT: " + (failed == 0 ? "✅ ALL TESTS PASSED!" : "❌ SOME TESTS FAILED"));
     }
     
-    // ==================== DATERANGE TESTS ====================
+    //  DATERANGE TESTS 
     
     private static void testDateRange() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -128,7 +128,7 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== CROP TESTS ====================
+    // CROP TESTS 
     
     private static void testCrop() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -202,7 +202,7 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== RESERVATIONSTATUS TESTS ====================
+    //RESERVATIONSTATUS TESTS
     
     private static void testReservationStatus() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -262,7 +262,7 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== GARDENER TESTS ====================
+    //  GARDENER TESTS 
     
     private static void testGardener() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -344,7 +344,7 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== GARDENPLOT TESTS ====================
+    // GARDENPLOT TESTS  
     
     private static void testGardenPlot() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -455,7 +455,6 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== RESERVATION TESTS ====================
     
     private static void testReservation() {
         System.out.println("─────────────────────────────────────────────────────────────");
@@ -757,14 +756,13 @@ public class TestScript {
         System.out.println();
     }
     
-    // ==================== HELPER METHOD ====================
     
     private static void test(String testName, boolean condition) {
         if (condition) {
-            System.out.println("  ✅ PASS: " + testName);
+            System.out.println(" PASS: " + testName);
             passed++;
         } else {
-            System.out.println("  ❌ FAIL: " + testName);
+            System.out.println("  FAIL: " + testName);
             failed++;
         }
     }
