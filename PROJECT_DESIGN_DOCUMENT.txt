@@ -1,0 +1,389 @@
+ GARDENMATE - PROJECT DESIGN DOCUMENT
+ Community Garden Plot Reservation System
+
+TABLE OF CONTENTS
+1. Project Overview
+2. System Architecture
+3. Class Descriptions
+4. Class Relationships
+5. Design Patterns
+6. Data Flow
+7. User Interface Flow
+8. Business Rules
+9. Ideas for Future Work
+
+
+1. PROJECT OVERVIEW
+
+What is GardenMate?
+GardenMate helps community gardeners book garden plots. Users can sign up,
+browse available plots, make reservations for specific dates, and plan what
+crops they want to grow.
+
+What can you do with it?
+- Sign up with your name and contact info
+- See all the garden plots and check if they're free
+- Book a plot for a date range
+- Pick crops you want to plant
+- Cancel bookings if plans change
+- Update your profile info
+
+Who is it for?
+Regular gardeners who want to use community garden space.
+
+
+2. SYSTEM ARCHITECTURE
+The code is organized into three layers:
+
+PRESENTATION LAYER - Main.java
+   This is what the user sees. It shows menus, takes input, and displays
+   results. All the print statements and Scanner stuff lives here.
+
+CONTROLLER LAYER - GardenSystem.java  
+   The "brain" of the app. When you want to make a reservation or find
+   available plots, this class handles it. It makes sure all the rules
+   are followed (like max 3 reservations per person).
+
+MODEL LAYER - Everything else
+   These are the data classes that represent real things:
+   - Gardener (a person)
+   - GardenPlot (a piece of land)
+   - Reservation (a booking)
+   - Crop (a plant)
+   - DateRange (a time period)
+   - ReservationStatus (booking state)
+
+3. CLASS DESCRIPTIONS
+Crop.java
+This represents a plant you can grow. Once you create a Crop, you can't 
+change it (that's what "immutable" means).
+
+Fields:
+  - name              The crop name like "Tomatoes"
+  - minGrowingDays    How many days it needs to grow
+  - bestSeasons       Which seasons work best (uses the Season enum inside)
+  - description       Extra info about the crop
+
+Has 3 constructors so you can create crops different ways:
+  - Full version: new Crop("Tomatoes", 90, seasons, "Needs sun")
+  - Just name and days: new Crop("Tomatoes", 90)
+  - Just name: new Crop("Tomatoes")
+
+Important methods:
+  - canGrowIn(dateRange) - tells you if the reservation is long enough
+  - equals() compares crops by name (ignores case, so "tomatoes" = "TOMATOES")
+
+DateRange.java
+Holds a start date and end date. Also immutable.
+
+Fields:
+  - startDate    When it starts
+  - endDate      When it ends
+
+Useful methods:
+  - overlaps(other)      Do two date ranges share any days?
+  - contains(date)       Is a specific date inside this range?
+  - contains(range)      Does this range fully cover another range?
+  - lengthInDays()       How many days total (counts both start and end)
+  - isInPast()           Has the end date already passed?
+  - isInFuture()         Is the start date still coming up?
+  - isCurrentlyActive()  Is today between start and end?
+
+
+ReservationStatus.java (enum)
+Tracks where a reservation is in its lifecycle:
+
+  REQUESTED   - Just created, waiting for confirmation
+  CONFIRMED   - Approved and active
+  CANCELLED   - User cancelled it
+  COMPLETED   - The reservation period ended
+
+How status changes work:
+  REQUESTED can go to CONFIRMED or CANCELLED
+  CONFIRMED can go to COMPLETED or CANCELLED
+  CANCELLED and COMPLETED are final - can't change after that
+
+Key methods:
+  - canTransitionTo(newStatus)  Checks if the change is allowed
+  - isActive()                  True for REQUESTED and CONFIRMED
+  - occupiesPlot()              Only CONFIRMED actually blocks the plot
+
+Gardener.java
+Represents someone who uses the system.
+
+Fields:
+  - gardenerID    Unique ID like "G001" (can't change this)
+  - name          Their name (can change)
+  - email         Contact email (optional)
+  - phoneNumber   Phone (optional)
+  - reservations  List of all their bookings
+
+You can create a Gardener with just an ID, or ID + name, or everything.
+
+Methods for checking reservations:
+  - getActiveReservations()       Returns only REQUESTED/CONFIRMED ones
+  - getActiveReservationCount()   How many active bookings
+  - hasReservationForPlot(id)     Already booked this specific plot?
+
+The addReservation() and removeReservation() methods are package-private,
+meaning only GardenSystem can call them. This keeps things organized.
+
+
+GardenPlot.java
+A physical plot of land in the garden.
+
+Fields:
+  - plotID          Unique ID like "P001"
+  - name            Display name like "Sunny Corner"
+  - sizeSqMeters    How big it is
+  - location        Where in the garden
+  - allowedCrops    What crops can be planted (empty = anything goes)
+  - reservations    All bookings for this plot
+  - currentGardener Who's using it right now
+
+Crop restriction methods:
+  - addAllowedCrop(name)    Add a crop to the allowed list
+  - removeAllowedCrop(name) Remove from allowed list
+  - clearCropRestrictions() Allow everything again
+  - isCropAllowed(crop)     Check if a crop can be planted here
+
+Availability methods:
+  - isAvailable(dateRange)  Can someone book these dates?
+  - isCurrentlyOccupied()   Is someone using it today?
+  - getConflictingReservations(range)  What bookings overlap?
+
+Reservation.java
+Connects a gardener to a plot for a time period.
+
+Fields:
+  - reservationID   Unique ID like "R0001"
+  - plot            Which plot
+  - gardener        Who booked it
+  - dateRange       When
+  - plantingPlan    What crops they plan to grow
+  - status          Current state (REQUESTED, CONFIRMED, etc.)
+
+Status methods:
+  - confirm()   Move from REQUESTED to CONFIRMED
+  - cancel()    Cancel the reservation
+  - complete()  Mark as finished
+
+Validation methods:
+  - validateCrops()         Are all planned crops allowed on this plot?
+  - validateGrowingPeriod() Is the booking long enough for the crops?
+
+
+GardenSystem.java
+The main controller class. Everything goes through here.
+
+It keeps track of:
+  - All plots in the system
+  - All registered gardeners
+  - All reservations ever made
+  - A counter for generating reservation IDs
+
+Important rule: MAX_ACTIVE_RESERVATIONS_PER_GARDENER = 3
+
+Plot methods:
+  - addPlot(plot)        Add a new plot
+  - removePlot(id)       Remove (only works if no active reservations)
+  - findPlotById(id)     Look up a plot
+
+Gardener methods:
+  - registerGardener(g)    Sign up a new user
+  - removeGardener(id)     Remove (only if no active reservations)
+  - findGardenerById(id)   Look up a gardener
+
+Finding available plots:
+  - findAvailablePlots(dateRange)       Which plots are free?
+  - findAvailablePlots(dateRange, crop) Free AND allows this crop?
+
+Reservation workflow:
+  - createReservation(plotId, gardenerId, range, crops)
+      Creates a REQUESTED reservation after checking everything
+  - confirmReservation(id)    Approve it
+  - cancelReservation(id)     Cancel it
+  - completeReservation(id)   Mark as done
+  - bookPlot(...)             Shortcut: create + confirm in one step
+
+Reports:
+  - generatePlantingReport()      Shows all reservations and crops
+  - generateAvailabilityReport()  Shows plot status
+
+
+Main.java
+The user interface. Runs the menus and handles all input/output.
+
+Static variables:
+  - system           The GardenSystem instance
+  - currentGardener  Who's logged in (null if nobody)
+  - scanner          For reading user input
+  - availableCrops   Pre-loaded list of crops
+
+The main loop:
+  1. If not logged in, show login menu
+  2. If logged in, show main menu
+  3. Keep going until user exits
+
+Menu methods handle each option:
+  - registerNewGardener(), loginGardener(), logout()
+  - viewAllPlots(), viewAvailablePlots()
+  - makeReservation(), viewMyReservations(), cancelReservation()
+  - viewAvailableCrops()
+  - viewMyProfile(), updateMyProfile()
+
+Helper methods:
+  - getDateRangeFromUser()  Asks for dates and creates a DateRange
+  - selectCrops(plot)       Shows crop menu filtered by what's allowed
+  - padRight(str, n)        For formatting output nicely
+
+
+4. CLASS RELATIONSHIPS
+
+How the classes connect:
+
+Main uses GardenSystem to do everything.
+
+GardenSystem keeps lists of:
+  - GardenPlot objects
+  - Gardener objects  
+  - Reservation objects
+
+Reservation points to:
+  - One Gardener (who made the booking)
+  - One GardenPlot (which plot)
+  - One DateRange (when)
+  - Multiple Crops (what to plant)
+  - One ReservationStatus (current state)
+
+Gardener has:
+  - A list of their Reservations
+
+GardenPlot has:
+  - A list of Reservations for it
+
+So there's a two-way link: Reservation knows its Gardener and Plot,
+and both Gardener and Plot know their Reservations.
+
+
+5. DESIGN PATTERNS
+
+A few OOP techniques used here:
+
+1. Immutable objects (Crop, DateRange)
+   Once created, they can't be changed. All their fields are final.
+   This prevents bugs from accidental modifications.
+
+2. Enum with methods (ReservationStatus)
+   Instead of just being constants, the enum has methods like
+   canTransitionTo() that know the rules about status changes.
+
+3. Facade (GardenSystem)
+   One class that handles everything. The UI (Main) doesn't need to
+   know how Gardener, Plot, and Reservation interact - it just calls
+   methods on GardenSystem.
+
+4. Multiple constructors
+   Most classes have 2-3 constructors so you can create objects with
+   different amounts of info. The simpler ones call the full one
+   with default values.
+
+5. Defensive returns
+   Methods like getReservations() return unmodifiable lists so outside
+   code can't mess with the internal data.
+
+
+
+6. DATA FLOW
+
+What happens when you make a reservation:
+
+1. User types in start and end dates
+   -> Main creates a DateRange object
+
+2. Main asks GardenSystem for available plots
+   -> GardenSystem checks each plot's reservations
+   -> Returns list of plots with no conflicts
+
+3. User picks a plot and optionally some crops
+
+4. Main calls GardenSystem.createReservation(...)
+   -> GardenSystem checks: does gardener exist? does plot exist?
+   -> Checks: does gardener have < 3 active reservations?
+   -> Checks: is the plot actually free for those dates?
+   -> Checks: are the crops allowed on this plot?
+   -> If all good, creates Reservation with REQUESTED status
+   -> Adds reservation to the plot's list and gardener's list
+
+5. Main calls GardenSystem.confirmReservation(id)
+   -> Changes status to CONFIRMED
+   -> Sets plot's currentGardener
+
+
+7. USER INTERFACE FLOW
+
+When you start the program:
+
+  Not logged in? -> Welcome Menu
+     1. Register (create account, auto-login)
+     2. Login (pick from list of gardener IDs)
+     3. View Plots (just browsing)
+     4. Exit
+
+  Logged in? -> Main Menu
+     1. View Available - check what's free for specific dates
+     2. Make Reservation - book a plot
+     3. My Reservations - see your bookings
+     4. Cancel - cancel a booking
+     5. View Crops - see all crop options
+     6. All Plots - see every plot
+     7. My Profile - your info
+     8. Update Profile - change name/email/phone
+     9. Logout - go back to welcome menu
+     0. Exit - quit program
+
+
+8. BUSINESS RULES
+
+The rules built into the system:
+
+- Each gardener can have at most 3 active reservations
+  (active = REQUESTED or CONFIRMED)
+
+- You can't book dates in the past
+
+- End date has to be on or after start date
+
+- Only CONFIRMED reservations block a plot
+  (so if someone has a REQUESTED booking that hasn't been confirmed,
+   someone else could still book the same dates)
+
+- Some plots restrict which crops you can plant
+  The Herb Garden only allows herbs, for example
+
+- Status changes follow specific rules:
+  REQUESTED -> CONFIRMED or CANCELLED
+  CONFIRMED -> COMPLETED or CANCELLED
+  Once CANCELLED or COMPLETED, it stays that way
+
+- Two gardeners are "equal" if they have the same ID
+  Two crops are "equal" if they have the same name (case doesn't matter)
+
+
+9. IDEAS FOR FUTURE WORK
+
+Tasks that could be added later:
+
+- Save data to files or a database (right now everything is lost when 
+  you close the program)
+- Admin accounts that can approve reservations
+- Send email when reservations are confirmed
+- A waitlist for popular plots
+- Let multiple people share a plot
+- Build a GUI instead of text menus
+- Show a calendar view of availability
+- Suggest which crops grow well together
+- Connect to weather APIs for planting advice
+
+
+
